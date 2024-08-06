@@ -179,3 +179,6 @@ cython_debug/
 
 # Folder
 data/
+
+# ZIP
+*.zip

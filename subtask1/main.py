@@ -15,10 +15,10 @@ from log import set_logging
 def main():
     
     set_logging()
-    train_root = "./Dataset/train/"
-    val_root = "./Dataset/val/"
-    train_df = pd.read_csv("./Dataset/Fashion-How24_sub1_train.csv")
-    val_df = pd.read_csv("./Dataset/Fashion-How24_sub1_val.csv")
+    train_root = r"C:\workspace\dataset\FashionHow\subtask1\train/"
+    val_root = r"C:\workspace\dataset\FashionHow\subtask1\val"
+    train_df = pd.read_csv(r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_train.csv")
+    val_df = pd.read_csv(r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_val.csv")
     clf = ClassificationDataLoader()
     train_loader = clf.get_train_loader(train_root, train_df, batch_size=CFG.BATCH_SIZE, shuffle=True)
     val_loader = clf.get_val_loader(val_root, val_df, batch_size=CFG.BATCH_SIZE, shuffle=False)
@@ -26,7 +26,7 @@ def main():
     scaler = torch.cuda.amp.GradScaler()
     criterion = nn.CrossEntropyLoss()
     optimizer = AdamW(model.parameters(), lr=CFG.LEARNING_RATE)
-    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0, verbose=True)
+    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=50, T_mult=1, eta_min=1e-6, verbose=True)
     trainer = Trainer(model, criterion, optimizer, scheduler, scaler, True)
     trainer.fit(train_loader, val_loader)
 
