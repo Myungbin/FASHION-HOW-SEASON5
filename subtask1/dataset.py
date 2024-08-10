@@ -1,8 +1,11 @@
+import logging
 import os
 
 import cv2
-from torch.utils.data import Dataset, DataLoader
-from augmentation import train_transform, inference_transform
+from torch.utils.data import DataLoader, Dataset
+
+from augmentation import inference_transform, train_transform
+
 
 def bbox_crop(image, data):
     x_min = data["BBox_xmin"]
@@ -57,16 +60,21 @@ class ClassificationDataLoader:
     def __init__(self):
         self.train_transform = train_transform()
         self.inference_transform = inference_transform()
+        
+        logging.info("Dataset Info:")
+        logging.info("------------------------------------------------------------")
+        logging.info(f"Image Train Transform: {self.train_transform}")
+        logging.info(f"Image Validation Taransfrom: {self.inference_transform}")
 
 
-    def get_train_loader(self, root, df, batch_size=4, shuffle=True):
-        dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=True)
+    def get_train_loader(self, root, df, batch_size=4, shuffle=True, crop=True):
+        dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=False)
         train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
 
         return train_loader
     
-    def get_val_loader(self, root, df, batch_size=4, shuffle=True):
-        dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=True)
+    def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False):
+        dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=False)
         val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
 
         return val_loader

@@ -179,6 +179,7 @@ cython_debug/
 
 # Folder
 data/
+timm/
 
 # ZIP
 *.zip

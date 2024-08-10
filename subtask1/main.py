@@ -20,8 +20,8 @@ def main():
     train_df = pd.read_csv(r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_train.csv")
     val_df = pd.read_csv(r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_val.csv")
     clf = ClassificationDataLoader()
-    train_loader = clf.get_train_loader(train_root, train_df, batch_size=CFG.BATCH_SIZE, shuffle=True)
-    val_loader = clf.get_val_loader(val_root, val_df, batch_size=CFG.BATCH_SIZE, shuffle=False)
+    train_loader = clf.get_train_loader(train_root, train_df, batch_size=CFG.BATCH_SIZE, shuffle=True, crop=False)
+    val_loader = clf.get_val_loader(val_root, val_df, batch_size=CFG.BATCH_SIZE, shuffle=False, crop=False)
     model = EVATiny()
     scaler = torch.cuda.amp.GradScaler()
     criterion = nn.CrossEntropyLoss()
@@ -32,5 +32,4 @@ def main():
 
 
 if __name__ == "__main__":
-    
     main()

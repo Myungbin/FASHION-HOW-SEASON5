@@ -34,7 +34,7 @@ class Trainer:
         self.early_stop = False
 
         if logger:
-            train_log("train", self.model, self.criterion, self.optimizer)
+            train_log("train", self.model, self.criterion, self.optimizer, self.scheduler)
 
     def train(self, train_loader):
         self.model.train()
@@ -143,7 +143,7 @@ class Trainer:
                 self.best_loss = avg_val_loss
                 best_model = self.model
                 model_name = self.model.__class__.__name__
-                save_model_name = f"{model_name}/{model_name}_{epoch + 1}Epoch.pth"
+                save_model_name = f"{model_name}_{epoch + 1}Epoch.pth"
                 save_model(best_model, save_model_name)
                 self.counter = 0
             else:

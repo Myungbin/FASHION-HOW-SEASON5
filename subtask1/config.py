@@ -1,14 +1,15 @@
 import os
 from pathlib import Path
-
+from datetime import datetime
 import torch
 
 
 class Config:
     # Directory
     ROOT_PATH = Path(__file__).parent
-    SAVE_MODEL_PATH = os.path.join(ROOT_PATH, "check_points")
-    LOG_DIR = "logs"
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    SAVE_MODEL_PATH = os.path.join(ROOT_PATH, "check_points", current_time)
+    LOG_DIR = SAVE_MODEL_PATH
 
     # data
     H = 224
@@ -21,7 +22,7 @@ class Config:
     EPOCHS = 300
     SEED = 42
     SHUFFLE = True
-    LEARNING_RATE = 3e-4
+    LEARNING_RATE = 5e-6
     
 CFG = Config()
 
