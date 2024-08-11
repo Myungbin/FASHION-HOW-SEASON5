@@ -10,26 +10,27 @@ class Config:
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     SAVE_MODEL_PATH = os.path.join(ROOT_PATH, "check_points", current_time)
     LOG_DIR = SAVE_MODEL_PATH
-    TRAIN_ROOT = r"C:\workspace\dataset\FashionHow\subtask1\train"
-    VAL_ROOT = r"C:\workspace\dataset\FashionHow\subtask1\val"
 
-    TRAIN_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_train.csv"
-    VAL_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_val.csv"
+    TRAIN_ROOT = r"C:\workspace\dataset\FashionHow\subtask2\train"
+    VAL_ROOT = r"C:\workspace\dataset\FashionHow\subtask2\val"
+    
+    TRAIN_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask2\Fashion-How24_sub2_train.csv"
+    VAL_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask2\Fashion-How24_sub2_val.csv"
+
     
     # data
-    H = 336
-    W = 336
+    H = 224
+    W = 224
 
     # train
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     NUM_WORKERS = torch.cuda.device_count() * 4
     BATCH_SIZE = 256
     EPOCHS = 300
-    SEED = 1103
+    SEED = 42
     SHUFFLE = True
     LEARNING_RATE = 5e-6
-
-
+    
 CFG = Config()
 
 
