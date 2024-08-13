@@ -41,9 +41,9 @@ class Trainer:
         train_loss = 0
         train_accuracy = 0
 
-        for _, data in enumerate(tqdm(train_loader)):
-            image = data["image"].to(CFG.DEVICE, non_blocking=True)
-            label = data["color"].to(CFG.DEVICE, non_blocking=True)
+        for _, (image, label) in enumerate(tqdm(train_loader)):
+            image = image.to(CFG.DEVICE, non_blocking=True)
+            label = label.to(CFG.DEVICE, non_blocking=True)
 
             with torch.cuda.amp.autocast():
                 prediction = self.model(image)
@@ -56,6 +56,8 @@ class Trainer:
 
             train_loss += loss.item() / len(train_loader)
             acc = (prediction.argmax(dim=1) == label).float().mean()
+            # if Cuxmix or Mixup is used, label is a tuple
+            # acc = (prediction.argmax(dim=1) == label.argmax(dim=1)).float().mean()
             train_accuracy += acc / len(train_loader)
 
         return train_loss, train_accuracy
@@ -67,9 +69,9 @@ class Trainer:
         validation_accuracy = 0
 
         with torch.inference_mode():
-            for _, data in enumerate(tqdm(val_loader)):
-                image = data["image"].to(CFG.DEVICE, non_blocking=True)
-                label = data["color"].to(CFG.DEVICE, non_blocking=True)
+            for _, (image, label) in enumerate(tqdm(val_loader)):
+                image = image.to(CFG.DEVICE, non_blocking=True)
+                label = label.to(CFG.DEVICE, non_blocking=True)
 
                 prediction = self.model(image)
                 loss = self.criterion(prediction, label)
@@ -101,13 +103,15 @@ class Trainer:
 
             if self.scheduler is not None:
                 self.scheduler.step()
+                # print(f"LR: {self.scheduler.get_last_lr()}")
+
             """Early Stop Logic"""
             if avg_val_loss < self.best_loss - self.delta:
                 print("Validation loss decreased, saving model")
                 self.best_loss = avg_val_loss
                 best_model = self.model
                 model_name = self.model.__class__.__name__
-                save_model_name = f"{model_name}_{epoch + 1}Epoch.pth"
+                save_model_name = f"Best_{model_name}.pth"
                 save_model(best_model, save_model_name)
                 self.counter = 0
             else:

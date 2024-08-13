@@ -113,6 +113,11 @@ class Trainer:
                 emb_validation_accuracy += emb_acc / len(val_loader)
                 
             validation_accuracy = (daily_validation_accuracy + gender_validation_accuracy + emb_validation_accuracy) / 3
+            
+            """어떤 class를 못 맞추는지 확인이 필요"""
+            logging.info(f"daily: {daily_validation_accuracy}")
+            logging.info(f"gender: {gender_validation_accuracy}")
+            logging.info(f"emb: {emb_validation_accuracy}")
 
         return validation_loss, validation_accuracy
 
@@ -143,7 +148,7 @@ class Trainer:
                 self.best_loss = avg_val_loss
                 best_model = self.model
                 model_name = self.model.__class__.__name__
-                save_model_name = f"{model_name}_{epoch + 1}Epoch.pth"
+                save_model_name = f"Best_{model_name}.pth"
                 save_model(best_model, save_model_name)
                 self.counter = 0
             else:

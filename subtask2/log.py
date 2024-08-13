@@ -13,7 +13,7 @@ def set_logging(file_name="main"):
         os.makedirs(CFG.LOG_DIR)
 
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file_name = f"TASK1_{file_name}.log"
+    log_file_name = f"TASK2_{file_name}.log"
     log_file_path = os.path.join(CFG.LOG_DIR, log_file_name)
 
     logging.basicConfig(

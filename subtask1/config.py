@@ -17,8 +17,8 @@ class Config:
     VAL_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_val.csv"
     
     # data
-    H = 336
-    W = 336
+    H = 224
+    W = 224
 
     # train
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

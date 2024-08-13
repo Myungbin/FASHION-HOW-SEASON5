@@ -5,22 +5,15 @@ import numpy as np
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler, default_collate
 
-from augmentation import train_transform_v2, inference_transform_v2, cutmix_or_mixup
-
-cutmix_or_mixup = cutmix_or_mixup(18)
-
-
-def collate_fn(batch):
-    return cutmix_or_mixup(*default_collate(batch))
+from augmentation import train_transform_v2, inference_transform_v2
 
 
 class ClassificationDataset(Dataset):
-    def __init__(self, root, df, transform=None, crop=True, use_hsv=False):
+    def __init__(self, root, df, transform=None, crop=True):
         self.root = root
         self.dataset = df
         self.transform = transform
         self.crop = crop
-        self.use_hsv = use_hsv
 
     def __len__(self):
         return len(self.dataset)
@@ -33,18 +26,23 @@ class ClassificationDataset(Dataset):
 
         image = Image.open(image_path).convert("RGB")
 
-        if self.use_hsv:
-            image = image.convert("HSV")
-
         if self.crop:
             image = self.bbox_crop(image, data)
 
         if self.transform is not None:
             image = self.transform(image)
 
-        label = data["Color"]
+        daily = data["Daily"]
+        gender = data["Gender"]
+        embellishment = data["Embellishment"]
 
-        return image, label
+        result = {}
+        result["image"] = image
+        result["daily"] = daily
+        result["gender"] = gender
+        result["embellishment"] = embellishment
+
+        return result
 
     def bbox_crop(self, image, data):
         x_min = data["BBox_xmin"]
@@ -66,38 +64,14 @@ class ClassificationDataLoader:
         logging.info(f"Image Train Transform: {self.train_transform}")
         logging.info(f"Image Validation Taransfrom: {self.inference_transform}")
 
-    def get_train_loader(self, root, df, batch_size=4, shuffle=True, crop=True, use_hsv=False, use_sampler=True,
-                         use_collate_fn=False):
-        dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=crop, use_hsv=use_hsv)
-
-        sampler = self.sampler() if use_sampler else None
-        if use_collate_fn:
-            train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4,
-                                      sampler=sampler, collate_fn=collate_fn)
-        else:
-            train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4,
-                                      sampler=sampler)
+    def get_train_loader(self, root, df, batch_size=4, shuffle=True, crop=True):
+        dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=crop)
+        train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
         logging.info(f"Crop: {crop}")
-        logging.info(f"Use HSV: {use_hsv}")
-        logging.info(f"Sampler: {use_sampler}")
-        logging.info(f"Collate: {use_collate_fn}")
         return train_loader
 
-    def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False, use_hsv=False):
-        dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=crop, use_hsv=use_hsv)
+    def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False):
+        dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=crop)
         val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
         logging.info(f"Crop: {crop}")
-        logging.info(f"Use HSV: {use_hsv}")
         return val_loader
-
-    def sampler(self):
-        import pandas as pd
-        from config import CFG
-        df = pd.read_csv(CFG.TRAIN_DF_PATH)
-        labels = df['Color'].values
-        class_counts = np.bincount(labels)
-        class_weights = 1. / class_counts
-        sample_weights = class_weights[labels]
-        logging.info(f"Class Weights: {class_weights}")
-        sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
-        return sampler
