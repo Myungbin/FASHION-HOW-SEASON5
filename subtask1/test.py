@@ -2,34 +2,29 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 
 from config import CFG
 
-from dataset import ClassificationDataLoader
-from log import set_logging
+from dataset_v2 import ClassificationDataLoader
+# from dataset import ClassificationDataLoader
+from testloader import TestLoader
 from model import EVATiny224
 from trainer import Trainer
 from utils import seed_everything
 
-
-def main():
+if __name__ == "__main__":
     seed_everything(CFG.SEED)
-    set_logging()
-    train_df = pd.read_csv(CFG.TRAIN_DF_PATH)
     val_df = pd.read_csv(CFG.VAL_DF_PATH)
-    clf = ClassificationDataLoader()
-    train_loader = clf.get_train_loader(CFG.TRAIN_ROOT, train_df, batch_size=CFG.BATCH_SIZE, shuffle=True, crop=True)
+    clf = TestLoader()
     val_loader = clf.get_val_loader(CFG.VAL_ROOT, val_df, batch_size=CFG.BATCH_SIZE, shuffle=False, crop=True)
     model = EVATiny224()
+    model.load_state_dict(torch.load("C:\workspace\FASHION-HOW\subtask1\model\Best_EVATiny224.pth", map_location="cpu"))
     scaler = torch.cuda.amp.GradScaler()
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.2)
+    criterion = nn.CrossEntropyLoss()
     optimizer = AdamW(model.parameters(), lr=CFG.LEARNING_RATE)
-    # scheduler = CosineAnnealingLR(optimizer, T_max=CFG.EPOCHS)
     scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=5e-7, verbose=True)
     trainer = Trainer(model, criterion, optimizer, scheduler, scaler, True)
-    trainer.fit(train_loader, val_loader)
+    loss, acc = trainer.validation(val_loader)
 
-
-if __name__ == "__main__":
-    main()
+    print(loss, acc)

@@ -58,6 +58,6 @@ def plot_losses_with_min_val_line(log_file_path, type="loss"):
     return val_value, val_epoch
 
 
-log_file_path = r"C:\workspace\FASHION-HOW\subtask1\check_points\20240811_200032\TASK1_main.log"
+log_file_path = r"C:\workspace\FASHION-HOW\subtask1\check_points\20240814_181127\TASK1_main.log"
 plot_losses_with_min_val_line(log_file_path, "loss")
 plot_losses_with_min_val_line(log_file_path, "acc")

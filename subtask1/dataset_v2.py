@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler, default_collate
 
-from augmentation import train_transform_v2, inference_transform_v2
+from augmentation_v2 import train_transform_v2, inference_transform_v2
 
 
 class ClassificationDataset(Dataset):
