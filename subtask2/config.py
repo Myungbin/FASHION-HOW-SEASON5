@@ -25,10 +25,10 @@ class Config:
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     NUM_WORKERS: int = torch.cuda.device_count() * 4
     BATCH_SIZE: int = 128
-    EPOCHS: int = 500
+    EPOCHS: int = 300
     SEED: int = 1103
     SHUFFLE: bool = True
-    LEARNING_RATE: float = 1e-3
+    LEARNING_RATE: float = 1e-4
 
 
 CFG = Config()

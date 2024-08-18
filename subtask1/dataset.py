@@ -1,12 +1,13 @@
-import random
 import logging
 import os
+import random
 
 import cv2
 from torch.utils.data import DataLoader, Dataset
 
 from augmentation import inference_transform, train_transform
 
+CROP_PROB = 1
 
 class ClassificationDataset(Dataset):
     def __init__(self, root, df, transform=None, crop=True):
@@ -14,7 +15,6 @@ class ClassificationDataset(Dataset):
         self.dataset = df
         self.transform = transform
         self.crop = crop
-        self.crop_prob = 0.5
 
     def __len__(self):
         return len(self.dataset)
@@ -28,7 +28,7 @@ class ClassificationDataset(Dataset):
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        if self.crop and random.random() < self.crop_prob:
+        if self.crop and random.random() < CROP_PROB:
             image = self.bbox_crop(image, data)
 
         if self.transform is not None:
@@ -69,12 +69,14 @@ class ClassificationDataLoader:
 
     def get_train_loader(self, root, df, batch_size=4, shuffle=True, crop=True):
         dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=crop)
-        train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
-        logging.info(f"Train Crop: {crop}")
+        train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=False, num_workers=4)
+        logging.info(f"Train with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}")
+
         return train_loader
 
     def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False):
         dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=crop)
-        val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
-        logging.info(f"Validation Crop: {crop}")
+        val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=False, num_workers=4)
+        logging.info(f"Validation with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}")
+
         return val_loader

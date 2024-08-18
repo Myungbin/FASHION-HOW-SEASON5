@@ -2,6 +2,8 @@ import logging
 from datetime import datetime
 
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from tqdm import tqdm
 
 from config import CFG
@@ -64,7 +66,7 @@ class Trainer:
             self.scaler.update()
 
             train_loss += loss.item() / len(train_loader)
-            
+
             daily_acc = (daily_pred.argmax(dim=1) == daily).float().mean()
             gender_acc = (gender_pred.argmax(dim=1) == gender).float().mean()
             emb_acc = (emb_pred.argmax(dim=1) == emb).float().mean()
@@ -72,9 +74,8 @@ class Trainer:
             daily_train_accuracy += daily_acc / len(train_loader)
             gender_train_accuracy += gender_acc / len(train_loader)
             emb_train_accuracy += emb_acc / len(train_loader)
-            
+
         train_accuracy = (daily_train_accuracy + gender_train_accuracy + emb_train_accuracy) / 3
-            
 
         return train_loss, train_accuracy
 
@@ -89,12 +90,12 @@ class Trainer:
 
         with torch.inference_mode():
             for batch_idx, data in enumerate(tqdm(val_loader)):
-                
+
                 image = data["image"].to(CFG.DEVICE, non_blocking=True)
                 daily = data["daily"].to(CFG.DEVICE, non_blocking=True)
                 gender = data["gender"].to(CFG.DEVICE, non_blocking=True)
                 emb = data["embellishment"].to(CFG.DEVICE, non_blocking=True)
-                
+
                 daily_pred, gender_pred, emb_pred = self.model(image)
                 daily_loss = self.criterion(daily_pred, daily)
                 gender_loss = self.criterion(gender_pred, gender)
@@ -103,17 +104,17 @@ class Trainer:
                 loss = daily_loss + gender_loss + emb_loss
 
                 validation_loss += loss.item() / len(val_loader)
-                
+
                 daily_acc = (daily_pred.argmax(dim=1) == daily).float().mean()
                 gender_acc = (gender_pred.argmax(dim=1) == gender).float().mean()
                 emb_acc = (emb_pred.argmax(dim=1) == emb).float().mean()
-                
+
                 daily_validation_accuracy += daily_acc / len(val_loader)
                 gender_validation_accuracy += gender_acc / len(val_loader)
                 emb_validation_accuracy += emb_acc / len(val_loader)
-                
+
             validation_accuracy = (daily_validation_accuracy + gender_validation_accuracy + emb_validation_accuracy) / 3
-            
+
             """어떤 class를 못 맞추는지 확인이 필요"""
             logging.info(f"daily: {daily_validation_accuracy}")
             logging.info(f"gender: {gender_validation_accuracy}")
@@ -122,10 +123,6 @@ class Trainer:
         return validation_loss, validation_accuracy
 
     def fit(self, train_loader, validation_loader):
-
-        logging.info(f"Train data size: {len(train_loader.dataset)}")
-        logging.info(f"Validation data size: {len(validation_loader.dataset)}")
-
         for epoch in range(CFG.EPOCHS):
             avg_train_loss, train_accuracy = self.train(train_loader)
             avg_val_loss, val_accuracy = self.validation(validation_loader)
@@ -161,3 +158,28 @@ class Trainer:
                     break
 
         return best_model
+
+
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=1, gamma=2, reduction="mean"):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        # Calculate the cross-entropy loss
+        ce_loss = F.cross_entropy(inputs, targets, reduction="none")
+
+        # Calculate the probability for the target class
+        prob = torch.exp(-ce_loss)
+
+        # Calculate the focal loss
+        focal_loss = (self.alpha * (1 - prob) ** self.gamma) * ce_loss
+
+        if self.reduction == "mean":
+            return focal_loss.mean()
+        elif self.reduction == "sum":
+            return focal_loss.sum()
+        else:
+            return focal_loss

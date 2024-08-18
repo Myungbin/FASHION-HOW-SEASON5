@@ -10,8 +10,8 @@ class Config:
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     SAVE_MODEL_PATH = os.path.join(ROOT_PATH, "check_points", current_time)
     LOG_DIR = SAVE_MODEL_PATH
-    TRAIN_ROOT = r"C:\workspace\dataset\FashionHow\subtask1\train"
-    VAL_ROOT = r"C:\workspace\dataset\FashionHow\subtask1\val"
+    TRAIN_ROOT = r"C:\workspace\dataset\FashionHow\subtask1\train2"
+    VAL_ROOT = r"C:\workspace\dataset\FashionHow\subtask1\val2"
 
     TRAIN_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_train.csv"
     VAL_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_val.csv"

@@ -77,6 +77,8 @@ class ClassificationDataLoader:
         else:
             train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4,
                                       sampler=sampler)
+        logging.info("Train Data Info ")
+        logging.info("------------------------------------------------------------")
         logging.info(f"Crop: {crop}")
         logging.info(f"Use HSV: {use_hsv}")
         logging.info(f"Sampler: {use_sampler}")
@@ -86,6 +88,8 @@ class ClassificationDataLoader:
     def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False, use_hsv=False):
         dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=crop, use_hsv=use_hsv)
         val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
+        logging.info("Validation Data Info ")
+        logging.info("------------------------------------------------------------")
         logging.info(f"Crop: {crop}")
         logging.info(f"Use HSV: {use_hsv}")
         return val_loader

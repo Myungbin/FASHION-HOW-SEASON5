@@ -5,26 +5,13 @@ import cv2
 import numpy as np
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler, default_collate
 
-from augmentation import inference_transform, train_transform, cutmix_or_mixup
+from augmentation import inference_transform, train_transform
 
-cutmix_or_mixup = cutmix_or_mixup(18)
+# cutmix_or_mixup = cutmix_or_mixup(18)
 
 
 def collate_fn(batch):
     return cutmix_or_mixup(*default_collate(batch))
-
-
-def sampler():
-    import pandas as pd
-    from config import CFG
-    df = pd.read_csv(CFG.TRAIN_DF_PATH)
-    labels = df['Color'].values
-    class_counts = np.bincount(labels)
-    class_weights = 1. / class_counts
-    sample_weights = class_weights[labels]
-    logging.info(f"Class Weights: {class_weights}")
-    sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
-    return sampler
 
 
 def bbox_crop(image, data):
@@ -56,6 +43,7 @@ class ClassificationDataset(Dataset):
         image_path = os.path.join(self.root, image_path)
 
         image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         if self.use_hsv:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)  # BGR 이미지를 HSV로 변환
@@ -81,23 +69,60 @@ class ClassificationDataLoader:
         logging.info(f"Image Train Transform: {self.train_transform}")
         logging.info(f"Image Validation Taransfrom: {self.inference_transform}")
 
-    def get_train_loader(self, root, df, batch_size=4, shuffle=True, crop=True, use_hsv=False, mixup=False):
+    def get_train_loader(
+        self, root, df, batch_size=4, shuffle=True, crop=True, use_hsv=False, use_sampler=False, mixup=False
+    ):
         dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=crop, use_hsv=use_hsv)
-        weight_sampler = sampler()
+        sampler = self.sampler() if use_sampler else None
+
         if mixup:
-            train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4,
-                                      sampler=weight_sampler, collate_fn=collate_fn)
+            train_loader = DataLoader(
+                dataset,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                pin_memory=True,
+                num_workers=4,
+                sampler=sampler,
+                collate_fn=collate_fn,
+            )
         else:
-            train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4,
-                                      sampler=weight_sampler)
-        logging.info(train_loader)
+            train_loader = DataLoader(
+                dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4, sampler=sampler
+            )
+        logging.info("Train Data Info ")
+        logging.info("------------------------------------------------------------")
+        logging.info(f"Train data size: {len(train_loader.dataset)}")
+        logging.info(f"Crop: {crop}")
+        logging.info(f"Use Hsv Transform: {use_hsv}")
+        logging.info(f"Use Mixup: {mixup}")
+        logging.info(f"Use Sampler: {use_sampler}")
+        logging.info("------------------------------------------------------------")
         return train_loader
 
     def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False, use_hsv=False):
         dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=crop, use_hsv=use_hsv)
         val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
-        logging.info(val_loader)
+        logging.info("Validation Data Info ")
+        logging.info("------------------------------------------------------------")
+        logging.info(f"Validation data size: {len(val_loader.dataset)}")
+        logging.info(f"Crop: {crop}")
+        logging.info(f"Use HSV: {use_hsv}")
+        logging.info("------------------------------------------------------------")
+
         return val_loader
+
+    def sampler(self):
+        import pandas as pd
+        from config import CFG
+
+        df = pd.read_csv(CFG.TRAIN_DF_PATH)
+        labels = df["Color"].values
+        class_counts = np.bincount(labels)
+        class_weights = 1.0 / class_counts
+        sample_weights = class_weights[labels]
+        logging.info(f"Class Weights: {class_weights}")
+        sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(sample_weights), replacement=True)
+        return sampler
 
 
 if __name__ == "__main__":

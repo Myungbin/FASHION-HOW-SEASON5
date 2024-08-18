@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 import torch
+import torch.nn as nn
 from tqdm import tqdm
 
 from config import CFG
@@ -83,10 +84,6 @@ class Trainer:
         return validation_loss, validation_accuracy
 
     def fit(self, train_loader, validation_loader):
-
-        logging.info(f"Train data size: {len(train_loader.dataset)}")
-        logging.info(f"Validation data size: {len(validation_loader.dataset)}")
-
         for epoch in range(CFG.EPOCHS):
             avg_train_loss, train_accuracy = self.train(train_loader)
             avg_val_loss, val_accuracy = self.validation(validation_loader)
@@ -124,3 +121,28 @@ class Trainer:
                     break
 
         return best_model
+
+
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=1, gamma=2, reduction="mean"):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        # Calculate the cross-entropy loss
+        ce_loss = F.cross_entropy(inputs, targets, reduction="none")
+
+        # Calculate the probability for the target class
+        prob = torch.exp(-ce_loss)
+
+        # Calculate the focal loss
+        focal_loss = (self.alpha * (1 - prob) ** self.gamma) * ce_loss
+
+        if self.reduction == "mean":
+            return focal_loss.mean()
+        elif self.reduction == "sum":
+            return focal_loss.sum()
+        else:
+            return focal_loss

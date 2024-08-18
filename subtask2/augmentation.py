@@ -2,7 +2,8 @@ import albumentations as A
 import cv2
 import torch
 from albumentations.pytorch import ToTensorV2
-from torchvision.transforms import v2
+
+# from torchvision.transforms import v2
 
 from config import CFG
 
@@ -21,13 +22,13 @@ def train_transform():
             #     ],
             #     p=0.5,
             # ),
-            A.OneOf(
-                [
-                    A.OpticalDistortion(distort_limit=0.5),
-                    A.GridDistortion(num_steps=5, distort_limit=0.5),
-                ],
-                p=0.3,
-            ),
+            # A.OneOf(
+            #     [
+            #         A.OpticalDistortion(distort_limit=0.5),
+            #         A.GridDistortion(num_steps=5, distort_limit=0.5),
+            #     ],
+            #     p=0.3,
+            # ),
             # A.OneOf(
             #     [
             #         A.MotionBlur(blur_limit=3),
@@ -72,35 +73,35 @@ def inference_transform():
     return transform
 
 
-def train_transform_v2():
-    transforms = v2.Compose(
-        [
-            v2.ToImage(),
-            v2.Resize(size=(224, 224), antialias=True),
-            v2.ToDtype(torch.uint8, scale=True),
-            v2.RandAugment(),
-            v2.ToDtype(torch.float32, scale=True),
-            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            v2.RandomErasing(p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False),
-        ]
-    )
-    return transforms
+# def train_transform_v2():
+#     transforms = v2.Compose(
+#         [
+#             v2.ToImage(),
+#             v2.Resize(size=(224, 224), antialias=True),
+#             v2.ToDtype(torch.uint8, scale=True),
+#             v2.RandAugment(),
+#             v2.ToDtype(torch.float32, scale=True),
+#             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+#             v2.RandomErasing(p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False),
+#         ]
+#     )
+#     return transforms
 
 
-def inference_transform_v2():
-    transforms = v2.Compose(
-        [
-            v2.ToImage(),
-            v2.Resize(size=(224, 224), antialias=True),
-            v2.ToDtype(torch.float32, scale=True),
-            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ]
-    )
-    return transforms
+# def inference_transform_v2():
+#     transforms = v2.Compose(
+#         [
+#             v2.ToImage(),
+#             v2.Resize(size=(224, 224), antialias=True),
+#             v2.ToDtype(torch.float32, scale=True),
+#             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+#         ]
+#     )
+#     return transforms
 
 
-def cutmix_or_mixup(NUM_CLASSES=18):
-    cutmix = v2.CutMix(num_classes=NUM_CLASSES)
-    mixup = v2.MixUp(num_classes=NUM_CLASSES)
-    cutmix_or_mixup = v2.RandomChoice([cutmix, mixup])
-    return cutmix_or_mixup
+# def cutmix_or_mixup(NUM_CLASSES=18):
+#     cutmix = v2.CutMix(num_classes=NUM_CLASSES)
+#     mixup = v2.MixUp(num_classes=NUM_CLASSES)
+#     cutmix_or_mixup = v2.RandomChoice([cutmix, mixup])
+#     return cutmix_or_mixup
