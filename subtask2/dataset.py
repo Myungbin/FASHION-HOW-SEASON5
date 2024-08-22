@@ -6,7 +6,7 @@ import numpy as np
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler, default_collate
 
 from augmentation import inference_transform, train_transform
-
+from config import CFG
 # cutmix_or_mixup = cutmix_or_mixup(18)
 
 
@@ -91,12 +91,13 @@ class ClassificationDataLoader:
             )
         logging.info("Train Data Info ")
         logging.info("------------------------------------------------------------")
+        logging.info(f"Train data path: {CFG.TRAIN_ROOT}")
         logging.info(f"Train data size: {len(train_loader.dataset)}")
         logging.info(f"Crop: {crop}")
         logging.info(f"Use Hsv Transform: {use_hsv}")
         logging.info(f"Use Mixup: {mixup}")
         logging.info(f"Use Sampler: {use_sampler}")
-        logging.info("------------------------------------------------------------")
+        logging.info("------------------------------------------------------------\n")
         return train_loader
 
     def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False, use_hsv=False):
@@ -104,10 +105,11 @@ class ClassificationDataLoader:
         val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
         logging.info("Validation Data Info ")
         logging.info("------------------------------------------------------------")
+        logging.info(f"Validation data path: {CFG.VAL_ROOT}")
         logging.info(f"Validation data size: {len(val_loader.dataset)}")
         logging.info(f"Crop: {crop}")
         logging.info(f"Use HSV: {use_hsv}")
-        logging.info("------------------------------------------------------------")
+        logging.info("------------------------------------------------------------\n")
 
         return val_loader
 

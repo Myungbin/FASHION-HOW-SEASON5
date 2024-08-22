@@ -11,7 +11,8 @@ from config import CFG
 def train_transform():
     transform = A.Compose(
         [
-            A.OneOf([A.Resize(CFG.H, CFG.W, interpolation=cv2.INTER_CUBIC)], p=1.0),
+            A.Resize(CFG.H, CFG.W, interpolation=cv2.INTER_CUBIC),
+            A.RGBShift(p=0.3),
             # A.VerticalFlip(p=0.5),
             # A.HorizontalFlip(p=0.5),
             # A.OneOf(

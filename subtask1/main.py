@@ -3,14 +3,16 @@ import torch
 import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealingLR
-
+from timm.loss import AsymmetricLossSingleLabel
+from transformers import get_cosine_schedule_with_warmup
 from config import CFG
 
 from dataset import ClassificationDataLoader
 from log import set_logging
 from model import EVATiny224
-from trainer import Trainer, FocalLoss
+from trainer import Trainer
 from utils import seed_everything
+
 
 
 def main():
@@ -24,7 +26,7 @@ def main():
     model = EVATiny224()
     scaler = torch.cuda.amp.GradScaler()
     criterion = nn.CrossEntropyLoss(label_smoothing=0.2)
-    # criterion = FocalLoss()
+    # criterion = AsymmetricLossSingleLabel()
     optimizer = AdamW(model.parameters(), lr=CFG.LEARNING_RATE)
     # scheduler = CosineAnnealingLR(optimizer, T_max=CFG.EPOCHS)
     scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=5e-7, verbose=True)

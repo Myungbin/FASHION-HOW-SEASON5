@@ -3,6 +3,7 @@ import os
 import random
 
 import cv2
+import pandas as pd
 from torch.utils.data import DataLoader, Dataset
 
 from augmentation import inference_transform, train_transform
@@ -12,20 +13,26 @@ CROP_PROB = CFG.CROP_PROB
 
 
 class ClassificationDataset(Dataset):
-    def __init__(self, root, df, transform=None, crop=True):
-        self.root = root
-        self.dataset = df
+    def __init__(self, root0, root1, df0, df1, transform=None, crop=True):
+        self.dataset = pd.concat([df0, df1], ignore_index=True)
+        self.root = root0 + root1
         self.transform = transform
         self.crop = crop
+
+        self.data_path = []
+        for i in range(len(df0)):
+            tmp = os.path.join(root0, self.dataset.iloc[i]["image_name"])
+            self.data_path.append(tmp)
+        for i in range(len(df1)):
+            tmp = os.path.join(root1, self.dataset.iloc[i]["image_name"])
+            self.data_path.append(tmp)
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx):
         data = self.dataset.iloc[idx]
-
-        image_path = data["image_name"]
-        image_path = os.path.join(self.root, image_path)
+        image_path = self.data_path[idx]
 
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -66,23 +73,19 @@ class ClassificationDataLoader:
 
         logging.info("Dataset Info:")
         logging.info("------------------------------------------------------------")
-        logging.info(f"Image Train Transform: {self.train_transform}\n")
-        logging.info(f"Image Validation Taransfrom: {self.inference_transform}\n")
+        logging.info(f"Image Train Transform: {self.train_transform}")
+        logging.info(f"Image Validation Taransfrom: {self.inference_transform}")
 
-    def get_train_loader(self, root, df, batch_size=4, shuffle=True, crop=True):
-        dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=crop)
+    def get_train_loader(self, root, root0, df, df1, batch_size=4, shuffle=True, crop=True):
+        dataset = ClassificationDataset(root, root0, df, df1, transform=self.train_transform, crop=crop)
         train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=False, num_workers=4)
-        logging.info(
-            f"Train with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}\nTrain Root: {CFG.TRAIN_ROOT}"
-        )
+        logging.info(f"Train with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}")
 
         return train_loader
 
-    def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False):
-        dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=crop)
+    def get_val_loader(self, root, root0, df, df1, batch_size=4, shuffle=True, crop=False):
+        dataset = ClassificationDataset(root, root0, df, df1, transform=self.train_transform, crop=crop)
         val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=False, num_workers=4)
-        logging.info(
-            f"Validation with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}\nValidation Root: {CFG.VAL_ROOT}"
-        )
+        logging.info(f"Validation with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}")
 
         return val_loader

@@ -19,6 +19,7 @@ class Config:
     # data
     H = 224
     W = 224
+    CROP_PROB = 1
 
     # train
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
