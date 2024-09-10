@@ -15,7 +15,7 @@ class Config:
 
     TRAIN_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_train.csv"
     VAL_DF_PATH = r"C:\workspace\dataset\FashionHow\subtask1\Fashion-How24_sub1_val.csv"
-    
+
     # data
     H = 224
     W = 224

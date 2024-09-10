@@ -9,6 +9,11 @@ from tqdm import tqdm
 from config import CFG
 from log import train_log
 from utils import save_model
+from torchvision.transforms import v2
+
+# cutmix_daily = v2.CutMix(num_classes=6)
+# cutmix_gender = v2.CutMix(num_classes=5)
+# cutmix_embellishment = v2.CutMix(num_classes=3)
 
 
 class Trainer:
@@ -46,11 +51,15 @@ class Trainer:
         gender_train_accuracy = 0
         emb_train_accuracy = 0
 
-        for batch_idx, data in enumerate(tqdm(train_loader)):
-            image = data["image"].to(CFG.DEVICE, non_blocking=True)
-            daily = data["daily"].to(CFG.DEVICE, non_blocking=True)
-            gender = data["gender"].to(CFG.DEVICE, non_blocking=True)
-            emb = data["embellishment"].to(CFG.DEVICE, non_blocking=True)
+        for _, (image, daily, gender, emb) in enumerate(tqdm(train_loader)):
+            image = image.to(CFG.DEVICE, non_blocking=True)
+            daily = daily.to(CFG.DEVICE, non_blocking=True)
+            gender = gender.to(CFG.DEVICE, non_blocking=True)
+            emb = emb.to(CFG.DEVICE, non_blocking=True)
+
+            # image, daily = cutmix_daily(image, daily)
+            # image, gender = cutmix_gender(image, gender)
+            # image, emb = cutmix_embellishment(image, emb)
 
             with torch.cuda.amp.autocast():
                 daily_pred, gender_pred, emb_pred = self.model(image)
@@ -71,6 +80,12 @@ class Trainer:
             gender_acc = (gender_pred.argmax(dim=1) == gender).float().mean()
             emb_acc = (emb_pred.argmax(dim=1) == emb).float().mean()
 
+            # if Cuxmix or Mixup is used, label is a tuple
+            # daily_acc = (daily_pred.argmax(dim=1) == daily.argmax(dim=1)).float().mean()
+            # gender_acc = (gender_pred.argmax(dim=1) == gender.argmax(dim=1)).float().mean()
+            # emb_acc = (emb_pred.argmax(dim=1) == emb.argmax(dim=1)).float().mean()
+
+
             daily_train_accuracy += daily_acc / len(train_loader)
             gender_train_accuracy += gender_acc / len(train_loader)
             emb_train_accuracy += emb_acc / len(train_loader)
@@ -89,12 +104,12 @@ class Trainer:
         emb_validation_accuracy = 0
 
         with torch.inference_mode():
-            for batch_idx, data in enumerate(tqdm(val_loader)):
+            for _, (image, daily, gender, emb) in enumerate(tqdm(val_loader)):
 
-                image = data["image"].to(CFG.DEVICE, non_blocking=True)
-                daily = data["daily"].to(CFG.DEVICE, non_blocking=True)
-                gender = data["gender"].to(CFG.DEVICE, non_blocking=True)
-                emb = data["embellishment"].to(CFG.DEVICE, non_blocking=True)
+                image = image.to(CFG.DEVICE, non_blocking=True)
+                daily = daily.to(CFG.DEVICE, non_blocking=True)
+                gender = gender.to(CFG.DEVICE, non_blocking=True)
+                emb = emb.to(CFG.DEVICE, non_blocking=True)
 
                 daily_pred, gender_pred, emb_pred = self.model(image)
                 daily_loss = self.criterion(daily_pred, daily)
@@ -116,9 +131,9 @@ class Trainer:
             validation_accuracy = (daily_validation_accuracy + gender_validation_accuracy + emb_validation_accuracy) / 3
 
             """어떤 class를 못 맞추는지 확인이 필요"""
-            logging.info(f"daily: {daily_validation_accuracy}")
-            logging.info(f"gender: {gender_validation_accuracy}")
-            logging.info(f"emb: {emb_validation_accuracy}")
+            # logging.info(f"daily: {daily_validation_accuracy}")
+            # logging.info(f"gender: {gender_validation_accuracy}")
+            # logging.info(f"emb: {emb_validation_accuracy}")
 
         return validation_loss, validation_accuracy
 

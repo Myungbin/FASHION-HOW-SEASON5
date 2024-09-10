@@ -21,10 +21,10 @@ class ClassificationDataset(Dataset):
 
         self.data_path = []
         for i in range(len(df0)):
-            tmp = os.path.join(root0, self.dataset.iloc[i]["image_name"])
+            tmp = os.path.join(root0, df0.iloc[i]["image_name"])
             self.data_path.append(tmp)
         for i in range(len(df1)):
-            tmp = os.path.join(root1, self.dataset.iloc[i]["image_name"])
+            tmp = os.path.join(root1, df1.iloc[i]["image_name"])
             self.data_path.append(tmp)
 
     def __len__(self):
@@ -36,7 +36,7 @@ class ClassificationDataset(Dataset):
 
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
+        
         if self.crop and random.random() < CROP_PROB:
             image = self.bbox_crop(image, data)
 
@@ -47,13 +47,7 @@ class ClassificationDataset(Dataset):
         gender = data["Gender"]
         embellishment = data["Embellishment"]
 
-        result = {}
-        result["image"] = image
-        result["daily"] = daily
-        result["gender"] = gender
-        result["embellishment"] = embellishment
-
-        return result
+        return image, daily, gender, embellishment
 
     def bbox_crop(self, image, data):
         x_min = data["BBox_xmin"]
@@ -78,14 +72,14 @@ class ClassificationDataLoader:
 
     def get_train_loader(self, root, root0, df, df1, batch_size=4, shuffle=True, crop=True):
         dataset = ClassificationDataset(root, root0, df, df1, transform=self.train_transform, crop=crop)
-        train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=False, num_workers=4)
+        train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
         logging.info(f"Train with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}")
 
         return train_loader
 
     def get_val_loader(self, root, root0, df, df1, batch_size=4, shuffle=True, crop=False):
         dataset = ClassificationDataset(root, root0, df, df1, transform=self.train_transform, crop=crop)
-        val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=False, num_workers=4)
+        val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
         logging.info(f"Validation with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}")
 
         return val_loader

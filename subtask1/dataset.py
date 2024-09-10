@@ -40,13 +40,7 @@ class ClassificationDataset(Dataset):
         gender = data["Gender"]
         embellishment = data["Embellishment"]
 
-        result = {}
-        result["image"] = image
-        result["daily"] = daily
-        result["gender"] = gender
-        result["embellishment"] = embellishment
-
-        return result
+        return image, daily, gender, embellishment
 
     def bbox_crop(self, image, data):
         x_min = data["BBox_xmin"]
@@ -69,20 +63,27 @@ class ClassificationDataLoader:
         logging.info(f"Image Train Transform: {self.train_transform}\n")
         logging.info(f"Image Validation Taransfrom: {self.inference_transform}\n")
 
-    def get_train_loader(self, root, df, batch_size=4, shuffle=True, crop=True):
+    def get_train_loader(self, root, df, crop=True):
         dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=crop)
-        train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=False, num_workers=4)
+        train_loader = DataLoader(dataset, batch_size=CFG.BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=4)
+
+        logging.info("Train Data Info ")
+        logging.info("------------------------------------------------------------")
         logging.info(
             f"Train with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}\nTrain Root: {CFG.TRAIN_ROOT}"
         )
+        logging.info("------------------------------------------------------------\n")
 
         return train_loader
 
-    def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False):
+    def get_val_loader(self, root, df, crop=False):
         dataset = ClassificationDataset(root, df, transform=self.inference_transform, crop=crop)
-        val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=False, num_workers=4)
+        val_loader = DataLoader(dataset, batch_size=CFG.BATCH_SIZE, shuffle=True, pin_memory=False, num_workers=4)
+        logging.info("Validation Data Info ")
+        logging.info("------------------------------------------------------------")
         logging.info(
             f"Validation with {len(dataset)} samples. Crop: {crop}, Crop_prob: {CROP_PROB}\nValidation Root: {CFG.VAL_ROOT}"
         )
+        logging.info("------------------------------------------------------------\n")
 
         return val_loader
