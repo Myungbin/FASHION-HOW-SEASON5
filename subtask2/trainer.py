@@ -11,7 +11,7 @@ from utils import save_model
 
 
 class Trainer:
-    def __init__(self, model, criterion, optimizer, scheduler, scaler=None, logger=None, patience=50, delta=0.001):
+    def __init__(self, model, criterion, optimizer, scheduler, scaler=None, logger=None, patience=50, delta=1e-4):
         """Trainer 클래스의 생성자.
 
         Args:

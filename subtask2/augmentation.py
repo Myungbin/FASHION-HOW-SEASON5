@@ -12,9 +12,9 @@ def train_transform():
     transform = A.Compose(
         [
             A.Resize(CFG.H, CFG.W, interpolation=cv2.INTER_CUBIC),
-            A.RGBShift(p=0.3),
             # A.VerticalFlip(p=0.5),
             # A.HorizontalFlip(p=0.5),
+            # A.GaussianBlur(),
             # A.OneOf(
             #     [
             #         A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2, p=0.3),

@@ -1,8 +1,8 @@
-import random
 import logging
 import os
-
+import random
 import cv2
+import pandas as pd
 import numpy as np
 from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler, default_collate
 
@@ -17,25 +17,30 @@ def collate_fn(batch):
 
 
 class ClassificationDataset(Dataset):
-    def __init__(self, root, df, transform=None, crop=True, use_hsv=False, is_train=True):
-        self.root = root
-        self.dataset = df
+    def __init__(self, root, root1, df, df1, transform=None, crop=True, use_hsv=False, is_train=True):
+        self.dataset = pd.concat([df, df1], ignore_index=True)
         self.transform = transform
         self.crop = crop
         self.use_hsv = use_hsv
         self.is_train = is_train
+
+        self.data_path = []
+        for i in range(len(df)):
+            tmp = os.path.join(root, df.iloc[i]["image_name"])
+            self.data_path.append(tmp)
+        for i in range(len(df1)):
+            tmp = os.path.join(root1, df1.iloc[i]["image_name"])
+            self.data_path.append(tmp)
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx):
         data = self.dataset.iloc[idx]
-
-        image_path = data["image_name"]
-        image_path = os.path.join(self.root, image_path)
+        image_path = self.data_path[idx]
 
         image = cv2.imread(image_path)
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         if self.use_hsv:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)  # BGR 이미지를 HSV로 변환
@@ -72,13 +77,16 @@ class ClassificationDataLoader:
 
         logging.info("Dataset Info:")
         logging.info("------------------------------------------------------------")
-        logging.info(f"Image Train Transform: {self.train_transform}")
+        logging.info(f"Use Origianl Images & Remove Background Images")
+        logging.info(f"Image Train Transform: {self.train_transform}\n")
         logging.info(f"Image Validation Taransfrom: {self.inference_transform}")
 
     def get_train_loader(
-        self, root, df, batch_size=4, shuffle=True, crop=True, use_hsv=False, use_sampler=False, mixup=False
+        self, root, root1, df, df1, batch_size=4, shuffle=True, crop=True, use_hsv=False, use_sampler=False, mixup=False
     ):
-        dataset = ClassificationDataset(root, df, transform=self.train_transform, crop=crop, use_hsv=use_hsv)
+        dataset = ClassificationDataset(
+            root, root1, df, df1, transform=self.train_transform, crop=crop, use_hsv=use_hsv, is_train=True
+        )
         sampler = self.sampler() if use_sampler else None
 
         if mixup:
@@ -106,9 +114,9 @@ class ClassificationDataLoader:
         logging.info("------------------------------------------------------------\n")
         return train_loader
 
-    def get_val_loader(self, root, df, batch_size=4, shuffle=True, crop=False, use_hsv=False):
+    def get_val_loader(self, root, root1, df, df1, batch_size=4, shuffle=True, crop=False, use_hsv=False):
         dataset = ClassificationDataset(
-            root, df, transform=self.inference_transform, crop=crop, use_hsv=use_hsv, is_train=False
+            root, root1, df, df1, transform=self.inference_transform, crop=crop, use_hsv=use_hsv, is_train=False
         )
         val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=True, num_workers=4)
         logging.info("Validation Data Info ")
@@ -126,6 +134,8 @@ class ClassificationDataLoader:
         from config import CFG
 
         df = pd.read_csv(CFG.TRAIN_DF_PATH)
+        df0 = df.copy()
+        df = pd.concat([df, df0], ignore_index=True)
         labels = df["Color"].values
         class_counts = np.bincount(labels)
         class_weights = 1.0 / class_counts
