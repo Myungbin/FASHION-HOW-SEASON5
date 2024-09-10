@@ -34,7 +34,8 @@ import torch.nn.functional as F
 
 class MemN2N(nn.Module):
     """End-To-End Memory Network."""
-    def __init__(self, embedding_size, key_size, mem_size, 
+
+    def __init__(self, embedding_size, key_size, mem_size,
                  meta_size, hops=3, nonlin=None, name='MemN2N'):
         """
         initialize and declare variables
@@ -49,25 +50,25 @@ class MemN2N(nn.Module):
         self._nonlin = nonlin
         self._name = name
 
-        self._queries = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-                size=(1, self._embedding_size)), 
-                requires_grad=True)
-        self._A = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-                size=(self._embedding_size, self._embedding_size_x2)), 
-                requires_grad=True)
-        self._B = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-                size=(self._embedding_size, self._embedding_size_x2)), 
-                requires_grad=True)
-        self._C = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-                size=(self._embedding_size, self._embedding_size_x2)), 
-                requires_grad=True)
-        self._H = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-                size=(self._embedding_size_x2, self._embedding_size_x2)), 
-                requires_grad=True)
-        self._W = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-                size=(self._embedding_size_x2, self._key_size)), 
-                requires_grad=True)
-            
+        self._queries = nn.Parameter(torch.normal(mean=0.0, std=0.01,
+                                                  size=(1, self._embedding_size)),
+                                     requires_grad=True)
+        self._A = nn.Parameter(torch.normal(mean=0.0, std=0.01,
+                                            size=(self._embedding_size, self._embedding_size_x2)),
+                               requires_grad=True)
+        self._B = nn.Parameter(torch.normal(mean=0.0, std=0.01,
+                                            size=(self._embedding_size, self._embedding_size_x2)),
+                               requires_grad=True)
+        self._C = nn.Parameter(torch.normal(mean=0.0, std=0.01,
+                                            size=(self._embedding_size, self._embedding_size_x2)),
+                               requires_grad=True)
+        self._H = nn.Parameter(torch.normal(mean=0.0, std=0.01,
+                                            size=(self._embedding_size_x2, self._embedding_size_x2)),
+                               requires_grad=True)
+        self._W = nn.Parameter(torch.normal(mean=0.0, std=0.01,
+                                            size=(self._embedding_size_x2, self._key_size)),
+                               requires_grad=True)
+
     def forward(self, stories):
         """
         build graph for end-to-end memory network
@@ -77,22 +78,22 @@ class MemN2N(nn.Module):
         u = [u_0]
         for _ in range(self._hops):
             # key embedding
-            m_temp = torch.matmul(torch.reshape(stories, 
-                        (-1, self._embedding_size)), self._A)
-            m = torch.reshape(m_temp, 
-                        (-1, self._mem_size, self._embedding_size_x2))
+            m_temp = torch.matmul(torch.reshape(stories,
+                                                (-1, self._embedding_size)), self._A)
+            m = torch.reshape(m_temp,
+                              (-1, self._mem_size, self._embedding_size_x2))
             u_temp = torch.transpose(
-                        torch.unsqueeze(u[-1], -1), 2, 1)
+                torch.unsqueeze(u[-1], -1), 2, 1)
             # get attention
-            dotted = torch.sum(m * u_temp, 2) 
+            dotted = torch.sum(m * u_temp, 2)
             probs = F.softmax(dotted, 1)
             probs_temp = torch.transpose(
-                            torch.unsqueeze(probs, -1), 2, 1)
+                torch.unsqueeze(probs, -1), 2, 1)
             # value embedding
-            c = torch.matmul(torch.reshape(stories, 
-                            (-1, self._embedding_size)), self._C)
-            c = torch.reshape(c, 
-                    (-1, self._mem_size, self._embedding_size_x2))
+            c = torch.matmul(torch.reshape(stories,
+                                           (-1, self._embedding_size)), self._C)
+            c = torch.reshape(c,
+                              (-1, self._mem_size, self._embedding_size_x2))
             c_temp = torch.transpose(c, 2, 1)
             # get intermediate result 
             o_k = torch.sum(c_temp * probs_temp, 2)
@@ -101,13 +102,14 @@ class MemN2N(nn.Module):
                 u_k = self._nonlin(u_k)
             u.append(u_k)
         # get final result    
-        req = torch.matmul(u[-1], self._W)    
+        req = torch.matmul(u[-1], self._W)
         return req
 
 
 class RequirementNet4(nn.Module):
     """Requirement Network"""
-    def __init__(self, mode, net_type, emb_size, key_size, mem_size, 
+
+    def __init__(self, mode, net_type, emb_size, key_size, mem_size,
                  meta_size, hops, name='RequirementNet'):
         """
         initialize and declare variables
@@ -116,7 +118,7 @@ class RequirementNet4(nn.Module):
         self._name = name
         self._net_type = net_type
         if self._net_type == 'memn2n':
-            self._memn2n = MemN2N(emb_size, key_size, 
+            self._memn2n = MemN2N(emb_size, key_size,
                                   mem_size, meta_size, hops)
         elif self._net_type == 'tf':
             dropout = 0.0
@@ -126,15 +128,15 @@ class RequirementNet4(nn.Module):
             num_layers = 3
             dim_ff = 256
             encoder_layer = nn.TransformerEncoderLayer(
-                    d_model=emb_size, dim_feedforward=dim_ff, 
-                    dropout=dropout, nhead=num_heads)
+                d_model=emb_size, dim_feedforward=dim_ff,
+                dropout=dropout, nhead=num_heads)
             self._transformer = nn.TransformerEncoder(
-                    encoder_layer, num_layers=num_layers)    
-            self._summary = nn.Linear(emb_size, key_size)   
-            self._queries = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-                                        size=(1, 1, emb_size)), 
-                                        requires_grad=True)
-        
+                encoder_layer, num_layers=num_layers)
+            self._summary = nn.Linear(emb_size, key_size)
+            self._queries = nn.Parameter(torch.normal(mean=0.0, std=0.01,
+                                                      size=(1, 1, emb_size)),
+                                         requires_grad=True)
+
     def forward(self, dlg):
         """
         build graph for requirement estimation
@@ -143,9 +145,9 @@ class RequirementNet4(nn.Module):
             req = self._memn2n(dlg)
         elif self._net_type == 'tf':
             bat_size = dlg.size()[0]
-            inputs = torch.cat((self._queries.repeat(bat_size,1,1), 
-                            dlg), dim=1)
+            inputs = torch.cat((self._queries.repeat(bat_size, 1, 1),
+                                dlg), dim=1)
             inputs = torch.transpose(inputs, 0, 1)
             enc = self._transformer(inputs)
             req = self._summary(enc[0])
-        return req    
+        return req

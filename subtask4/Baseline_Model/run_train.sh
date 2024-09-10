@@ -1,7 +1,7 @@
 CUDA_VISIBLE_DEVICES="0" python3 ./main.py --mode train \
-                                     --in_file_trn_dialog ./data/ddata.wst.txt.2023.08.29 \
-                                     --in_file_fashion ./data/mdata.wst.txt.2023.08.23 \
-                                     --in_dir_img_feats ./data/img_feats \
+                                     --in_file_trn_dialog C:/workspace/dataset/FashionHow/subtask4/ddata.wst.txt.2023.08.29 \
+                                     --in_file_fashion C:/workspace/dataset/FashionHow/subtask4/mdata.wst.txt.2023.08.23 \
+                                     --in_dir_img_feats C:/workspace/dataset/FashionHow/subtask4/img_feats \
                                      --subWordEmb_path ./sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
                                      --model_path ./model \
                                      --req_net_type memn2n \

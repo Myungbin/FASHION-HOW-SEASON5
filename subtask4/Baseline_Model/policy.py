@@ -27,7 +27,6 @@ SOFTWARE.
 Update: 2023.02.22.
 '''
 
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -37,9 +36,10 @@ from collections import OrderedDict
 
 class PolicyNet4(nn.Module):
     """Class for policy network"""
-    def __init__(self, net_type, emb_size, key_size, item_size, meta_size, 
-                 coordi_size, eval_node, num_rnk, use_batch_norm, 
-                 use_dropout, eval_zero_prob, tf_dropout, tf_nhead, 
+
+    def __init__(self, net_type, emb_size, key_size, item_size, meta_size,
+                 coordi_size, eval_node, num_rnk, use_batch_norm,
+                 use_dropout, eval_zero_prob, tf_dropout, tf_nhead,
                  tf_ff_dim, tf_num_layers, use_multimodal,
                  img_feat_size, name='PolicyNet'):
         """
@@ -72,17 +72,17 @@ class PolicyNet4(nn.Module):
             num_layers = tf_num_layers
             dim_ff = tf_ff_dim
 
-            num_in = self._emb_size * self._meta_size 
+            num_in = self._emb_size * self._meta_size
             if use_multimodal:
-                num_in += img_feat_size            
+                num_in += img_feat_size
             encoder_layer = nn.TransformerEncoderLayer(
-                    d_model=num_in, dim_feedforward=dim_ff, 
-                    dropout=dropout, nhead=num_heads)
+                d_model=num_in, dim_feedforward=dim_ff,
+                dropout=dropout, nhead=num_heads)
             self._transformer = nn.TransformerEncoder(
-                    encoder_layer, num_layers=num_layers)    
-            self._summary = nn.Linear(num_in, self._eval_out_node)            
-            self._queries = nn.Linear(self._key_size, num_in)   
-        # MLP             
+                encoder_layer, num_layers=num_layers)
+            self._summary = nn.Linear(num_in, self._eval_out_node)
+            self._queries = nn.Linear(self._key_size, num_in)
+            # MLP
         elif self._net_type == 'mlp':
             buf = eval_node[1:-1].split('][')
             self._num_hid_eval = list(map(int, buf[0].split(',')))
@@ -92,49 +92,49 @@ class PolicyNet4(nn.Module):
 
             mlp_eval_list = OrderedDict([])
             num_in = self._emb_size * self._meta_size * self._coordi_size \
-                        + self._key_size
+                     + self._key_size
             if use_multimodal:
-                num_in += img_feat_size            
+                num_in += img_feat_size
             self._count_eval = 0
             for i in range(self._num_hid_layer_eval):
                 num_out = self._num_hid_eval[i]
-                mlp_eval_list.update({ 
-                    'layer%s_linear'%(i+1): nn.Linear(num_in, num_out)}) 
                 mlp_eval_list.update({
-                    'layer%s_relu'%(i+1): nn.ReLU()})
+                    'layer%s_linear' % (i + 1): nn.Linear(num_in, num_out)})
+                mlp_eval_list.update({
+                    'layer%s_relu' % (i + 1): nn.ReLU()})
                 if use_batch_norm:
                     mlp_eval_list.update({
-                        'layer%s_bn'%(i+1): nn.BatchNorm1d(num_out)})
+                        'layer%s_bn' % (i + 1): nn.BatchNorm1d(num_out)})
                 if use_dropout:
                     mlp_eval_list.update({
-                        'layer%s_dropout'%(i+1): nn.Dropout(p=eval_zero_prob)})
-                self._count_eval += (num_in * num_out + num_out)            
+                        'layer%s_dropout' % (i + 1): nn.Dropout(p=eval_zero_prob)})
+                self._count_eval += (num_in * num_out + num_out)
                 num_in = num_out
-            self._eval_out_node = num_out 
-            self._mlp_eval = nn.Sequential(mlp_eval_list) 
+            self._eval_out_node = num_out
+            self._mlp_eval = nn.Sequential(mlp_eval_list)
 
         mlp_rnk_list = OrderedDict([])
         num_in = self._eval_out_node * self._num_rnk + self._key_size
-        for i in range(self._num_hid_layer_rnk+1):
+        for i in range(self._num_hid_layer_rnk + 1):
             if i == self._num_hid_layer_rnk:
                 num_out = math.factorial(self._num_rnk)
-                mlp_rnk_list.update({ 
-                    'layer%s_linear'%(i+1): nn.Linear(num_in, num_out)}) 
+                mlp_rnk_list.update({
+                    'layer%s_linear' % (i + 1): nn.Linear(num_in, num_out)})
             else:
                 num_out = self._num_hid_rnk[i]
-                mlp_rnk_list.update({ 
-                    'layer%s_linear'%(i+1): nn.Linear(num_in, num_out)}) 
                 mlp_rnk_list.update({
-                    'layer%s_relu'%(i+1): nn.ReLU()})
+                    'layer%s_linear' % (i + 1): nn.Linear(num_in, num_out)})
+                mlp_rnk_list.update({
+                    'layer%s_relu' % (i + 1): nn.ReLU()})
                 if use_batch_norm:
                     mlp_rnk_list.update({
-                    'layer%s_bn'%(i+1): nn.BatchNorm1d(num_out)})
+                        'layer%s_bn' % (i + 1): nn.BatchNorm1d(num_out)})
                 if use_dropout:
                     mlp_rnk_list.update({
-                    'layer%s_dropout'%(i+1): nn.Dropout(p=eval_zero_prob)})
+                        'layer%s_dropout' % (i + 1): nn.Dropout(p=eval_zero_prob)})
             self._count_eval += (num_in * num_out + num_out)
             num_in = num_out
-        self._mlp_rnk = nn.Sequential(mlp_rnk_list) 
+        self._mlp_rnk = nn.Sequential(mlp_rnk_list)
 
     def _evaluate_coordi(self, crd, req):
         """
@@ -176,4 +176,3 @@ class PolicyNet4(nn.Module):
         in_rnk = torch.cat((in_rnk, req), 1)
         out_rnk = self._ranking_coordi(in_rnk)
         return out_rnk
-        
