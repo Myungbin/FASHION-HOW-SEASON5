@@ -24,7 +24,7 @@ def main():
     scaler = torch.cuda.amp.GradScaler()
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
     optimizer = AdamW(model.parameters(), lr=CFG.LEARNING_RATE)
-    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=5e-7)
+    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=5e-8)
     trainer = Trainer(model, criterion, optimizer, scheduler, scaler, True)
     trainer.fit(train_loader, val_loader)
 

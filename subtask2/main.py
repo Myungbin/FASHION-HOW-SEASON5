@@ -32,7 +32,7 @@ def main():
     )
     model = EVATiny()
     scaler = torch.cuda.amp.GradScaler()
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.15)
     optimizer = AdamW(model.parameters(), lr=CFG.LEARNING_RATE)
     scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=2, eta_min=CFG.LEARNING_RATE / 10)
     trainer = Trainer(model, criterion, optimizer, scheduler, scaler, True)
