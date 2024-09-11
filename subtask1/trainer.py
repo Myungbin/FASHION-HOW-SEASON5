@@ -4,12 +4,12 @@ from datetime import datetime
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.transforms import v2
 from tqdm import tqdm
 
 from config import CFG
 from log import train_log
 from utils import save_model
-from torchvision.transforms import v2
 
 # cutmix_daily = v2.CutMix(num_classes=6)
 # cutmix_gender = v2.CutMix(num_classes=5)
@@ -84,7 +84,6 @@ class Trainer:
             # daily_acc = (daily_pred.argmax(dim=1) == daily.argmax(dim=1)).float().mean()
             # gender_acc = (gender_pred.argmax(dim=1) == gender.argmax(dim=1)).float().mean()
             # emb_acc = (emb_pred.argmax(dim=1) == emb.argmax(dim=1)).float().mean()
-
 
             daily_train_accuracy += daily_acc / len(train_loader)
             gender_train_accuracy += gender_acc / len(train_loader)
