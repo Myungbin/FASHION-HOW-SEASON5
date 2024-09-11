@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 from config import CFG
 from dataset import ClassificationDataLoader
 from log import set_logging
@@ -32,9 +32,9 @@ def main():
     )
     model = EVATiny()
     scaler = torch.cuda.amp.GradScaler()
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
     optimizer = AdamW(model.parameters(), lr=CFG.LEARNING_RATE)
-    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=1e-5)
+    scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=20, T_mult=2, eta_min=1e-5)
     trainer = Trainer(model, criterion, optimizer, scheduler, scaler, True)
     trainer.fit(train_loader, val_loader)
 

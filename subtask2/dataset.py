@@ -4,17 +4,10 @@ import os
 
 import cv2
 import numpy as np
-from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler, default_collate
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 from augmentation import inference_transform, train_transform
 from config import CFG
-
-# cutmix_or_mixup = cutmix_or_mixup(18)
-
-
-def collate_fn(batch):
-    return cutmix_or_mixup(*default_collate(batch))
-
 
 class ClassificationDataset(Dataset):
     def __init__(self, root, df, transform=None, crop=True, use_hsv=False, is_train=True):
