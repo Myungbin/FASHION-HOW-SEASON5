@@ -1,6 +1,6 @@
-import random
 import logging
 import os
+import random
 
 import cv2
 import numpy as np
@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 from augmentation import inference_transform, train_transform
 from config import CFG
+
 
 class ClassificationDataset(Dataset):
     def __init__(self, root, df, transform=None, crop=True, use_hsv=False, is_train=True):
@@ -116,6 +117,7 @@ class ClassificationDataLoader:
 
     def sampler(self):
         import pandas as pd
+
         from config import CFG
 
         df = pd.read_csv(CFG.TRAIN_DF_PATH)

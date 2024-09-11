@@ -1,4 +1,5 @@
 import torch.nn as nn
+
 import timm
 
 
@@ -37,4 +38,3 @@ class Mobile(nn.Module):
     def forward(self, x):
         x = self.backbone(x)
         return x
-
