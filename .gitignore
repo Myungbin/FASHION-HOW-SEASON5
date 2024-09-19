@@ -175,7 +175,10 @@ cython_debug/
 *.pkl
 
 *.csv
-*.pdf
+subtask1/*.pdf
+subtask2/*.pdf
+subtask3/*.pdf
+subtask4/*.pdf
 
 # Folder
 data/

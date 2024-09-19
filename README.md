@@ -3,8 +3,12 @@
 
 ## Task
 __Train Strategy__  
-[Subtask-1](subtask1\README.md)   
-[Subtask-2](subtask2\README.md)
+Subtask1  
+[Subtask-1 Information](subtask1/README.md)   
+[Subtask-1 Experiments](SUB_TASK1_Experiments.pdf)  
+Subtask2  
+[Subtask-2 Information](subtask2/README.md)  
+[Subtask-2 Experiments](SUB_TASK2_Experiments.pdf)
 
 
 ## Result
