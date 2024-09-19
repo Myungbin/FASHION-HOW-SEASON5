@@ -2,11 +2,10 @@
 - 이번 대회는 모델 경량화에 초점을 맞추어 실시간 성능과 효율성을 높이는 데 중점을 둡니다.
 
 ## Task
-__Train Strategy__  
-Subtask1  
+`Subtask1  `  
 [Subtask-1 Information](subtask1/README.md)   
 [Subtask-1 Experiments](SUB_TASK1_Experiments.pdf)  
-Subtask2  
+`Subtask2  `  
 [Subtask-2 Information](subtask2/README.md)  
 [Subtask-2 Experiments](SUB_TASK2_Experiments.pdf)
 
