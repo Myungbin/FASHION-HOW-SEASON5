@@ -21,7 +21,8 @@ FASHION-HOW
 └─ README.md
 ```
 
-## Task
+## Task Experiments
+   
 `Subtask1`  
 [Subtask-1 Information](subtask1/README.md)   
 [Subtask-1 Experiments](SUB_TASK1_Experiments.pdf)  
@@ -38,6 +39,7 @@ FASHION-HOW
 
 
 ### Development Environment
+---
 `Python 3.11.8`  `PyTorch 2.2.2+cu121`
 
 ```
