@@ -39,7 +39,6 @@ FASHION-HOW
 
 
 ### Development Environment
----
 `Python 3.11.8`  `PyTorch 2.2.2+cu121`
 
 ```
